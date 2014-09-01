@@ -1,9 +1,14 @@
 package com.mtomczak.nausicaa;
 
 import android.app.Activity;
-import android.widget.TextView;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.TextView;
+import com.google.android.glass.view.WindowUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
@@ -20,18 +25,72 @@ public class MainActivity extends Activity
   private WebSocketClient telemachus = null;
   private Timer connectTimer = new Timer();
 
-  /** Address of Telemachus. TODO(mtomczak): Make configurable. **/
-  private static final String telemachusAddress =
-    "192.168.1.3:8085";
+  private DataSource telemachusAddress = null;
+  private static final String ADDRESS_PREF="TelemachusAddress";
+
+  public static final String DATASOURCE_INTENT =
+    "com.mtomczak.nausicaa.DATASOURCE";
 
   /** Called when the activity is first created. */
   @Override
     public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
     setContentView(R.layout.main);
     output = (TextView) findViewById(R.id.output);
     output.setKeepScreenOn(true);
-    output.setText("Establishing connection...");
+    SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+    if(prefs.contains(ADDRESS_PREF)) {
+      try {
+	telemachusAddress = DataSource.fromPath(prefs.getString(ADDRESS_PREF, ""));
+      } catch(DataSource.ParseError e) {
+	Log.e("Nausicaa", "Corrupt prefs: " + prefs.getString(ADDRESS_PREF, "<none>"));
+	// ignore; the preference is corrupt and the default will take over.
+      }
+    }
+    if (telemachusAddress == null) {
+      telemachusAddress = new DataSource("192.168.1.3", 8085);
+    }
+  }
+
+  @Override
+    public boolean onCreatePanelMenu(int featureId, Menu menu) {
+    if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
+      getMenuInflater().inflate(R.menu.main, menu);
+      return true;
+    }
+    return super.onCreatePanelMenu(featureId, menu);
+  }
+
+  @Override
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+    if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
+      if (item.getItemId() == R.id.set_telemetry_source_option) {
+
+	Intent intent = new Intent(getBaseContext(), DataSourceActivity.class);
+	intent.putExtra(DATASOURCE_INTENT, telemachusAddress.getPath());
+	startActivityForResult(intent, 0);
+      }
+    }
+    return true;
+  }
+
+  @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    Log.i("Nausicaa", "Procssing activity result");
+    if (resultCode == RESULT_OK) {
+      try {
+	DataSource ds = DataSource.fromPath(data.getStringExtra(DATASOURCE_INTENT));
+	telemachusAddress = ds;
+	SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
+	editor.putString(ADDRESS_PREF, telemachusAddress.getPath());
+	editor.commit();
+	establishConnection();
+      } catch (DataSource.ParseError e) {
+	Log.e("Nausicaa", "Bad data from preferences intent: " + e.toString());
+      }
+    }
   }
 
   private void setOutput(final String s) {
@@ -64,11 +123,15 @@ public class MainActivity extends Activity
     }
   }
 
-  @Override
-    public void onResume() {
-    super.onResume();
+  private void establishConnection() {
     try {
-      URI uri = new URI("ws://" + telemachusAddress + "/datalink");
+      if (telemachus != null) {
+	telemachus.close();
+	telemachus = null;
+      }
+      Log.i("Nausicaa", "Establishing connection to " + telemachusAddress.getPath());
+      output.setText("Establishing connection to" + telemachusAddress.getPath());
+      URI uri = new URI("ws://" + telemachusAddress.getPath() + "/datalink");
       telemachus = new WebSocketClient(uri) {
 	  @Override
 	    public void onOpen(ServerHandshake serverHandshake) {
@@ -97,6 +160,12 @@ public class MainActivity extends Activity
     } catch (final URISyntaxException e) {
       setOutput("Error:\n" + e.toString());
     }
+  }
+
+  @Override
+    public void onResume() {
+    super.onResume();
+    establishConnection();
   }
 
   @Override
