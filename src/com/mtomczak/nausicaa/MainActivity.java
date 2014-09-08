@@ -67,7 +67,22 @@ public class MainActivity extends Activity
 
   private void initAtmosphericData() {
     atmosphericData = new HashMap();
+      // Moho has no atmosphere
+    atmosphericData.put("Eve", new Double(90000.0));
+      // Gilly has no atmosphere
     atmosphericData.put("Kerbin", new Double(70000.0));
+      // Mun has no atmosphere
+      // Minmus has no atmosphere
+    atmosphericData.put("Duna", new Double(50000.0));
+      // Ike has no atmosphere
+    // Dres has no atmosphere
+    atmosphericData.put("Jool", new Double(200000.0));
+      atmosphericData.put("Laythe", new Double(50000.0));
+      // Vall has no atmosphere
+      // Tylo has no atmosphere
+      // Bop  has no atmosphere
+      // Pol  has no atmosphere
+    // Eeloo has no atmosphere
   }
 
   // init for text to speech engine
