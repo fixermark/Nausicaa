@@ -30,6 +30,7 @@ public class MainActivity extends Activity
 
   private boolean circularOrbit = true;
   private boolean atmosphericDragThreat = true;
+  private boolean electricChargeUnderFiftyPercent = false;
 
   private DataSource telemachusAddress = null;
   private HashMap<String, Double> atmosphericData = null;
@@ -191,6 +192,17 @@ public class MainActivity extends Activity
 	}
 	atmosphericDragThreat = dragThreat;
       }
+      double electricCharge = data.getDouble("r.resource[ElectricCharge]");
+      double electricChargeMax = data.getDouble("r.resourceMax[ElectricCharge]");
+      double electricChargePercent = electricCharge / electricChargeMax;
+      boolean electricChargeLow = electricChargePercent < 0.5;
+      if (electricChargeLow && !electricChargeUnderFiftyPercent) {
+	say("Warning: Electric charge has fallen to under fifty percent.");
+	stopTimeWarp();
+      }
+      electricChargeUnderFiftyPercent = electricChargeLow;
+      out += "Electric %: " + formatDouble(electricChargePercent * 100);
+
       return out;
     } catch(Exception e) {
       Log.e("Nausicaa", e.toString());
@@ -212,7 +224,8 @@ public class MainActivity extends Activity
 	    public void onOpen(ServerHandshake serverHandshake) {
 	    setOutput("Connected.");
 	    String sendString = "{\"+\":[\"v.body\",\"v.altitude\",\"v.orbitalVelocity\"," +
-	      "\"v.verticalSpeed\",\"o.ApA\",\"o.PeA\"],\"rate\":500}";
+	      "\"v.verticalSpeed\",\"o.ApA\",\"o.PeA\"," +
+	      "\"r.resource[ElectricCharge]\",\"r.resourceMax[ElectricCharge]\"],\"rate\":500}";
 	    telemachus.send(sendString);
 	  }
 
@@ -255,6 +268,14 @@ public class MainActivity extends Activity
   private void say(String msg) {
     if (tts != null) {
       tts.speak(msg, TextToSpeech.QUEUE_ADD, null);
+    }
+  }
+
+  /** @brief Requests a halt to timewarp.
+   */
+  private void stopTimeWarp() {
+    if (telemachus != null) {
+      telemachus.send("{\"run\":[\"t.timeWarp[0]\"]}");
     }
   }
 }
