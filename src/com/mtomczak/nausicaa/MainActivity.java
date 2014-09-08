@@ -33,9 +33,11 @@ public class MainActivity extends Activity
   private boolean electricChargeUnderFiftyPercent = false;
 
   private DataSource telemachusAddress = null;
+  private boolean stopTimeScaleOnAlert = true;
+
   private HashMap<String, Double> atmosphericData = null;
   private static final String ADDRESS_PREF="TelemachusAddress";
-
+  private static final String TIME_SCALE_PREF = "StopTimeScaleOnAlert";
   private static final double ECCENTRICITY_THRESHOLD = 0.09;
 
   public static final String DATASOURCE_INTENT =
@@ -57,6 +59,13 @@ public class MainActivity extends Activity
       } catch(DataSource.ParseError e) {
 	Log.e("Nausicaa", "Corrupt prefs: " + prefs.getString(ADDRESS_PREF, "<none>"));
 	// ignore; the preference is corrupt and the default will take over.
+      }
+    }
+    if (prefs.contains(TIME_SCALE_PREF)) {
+      try {
+	stopTimeScaleOnAlert = prefs.getBoolean(TIME_SCALE_PREF, true);
+      } catch (ClassCastException e) {
+	Log.e("Nausicaa", "Corrupt prefs: " + TIME_SCALE_PREF + "\n" + e.toString());
       }
     }
     if (telemachusAddress == null) {
@@ -121,6 +130,9 @@ public class MainActivity extends Activity
 	intent.putExtra(DATASOURCE_INTENT, telemachusAddress.getPath());
 	startActivityForResult(intent, 0);
       }
+      if (item.getItemId() == R.id.toggle_time_scale_option) {
+	toggleStopTimeScalePreference();
+      }
     }
     return true;
   }
@@ -142,6 +154,13 @@ public class MainActivity extends Activity
     }
   }
 
+  private void toggleStopTimeScalePreference() {
+    stopTimeScaleOnAlert = !stopTimeScaleOnAlert;
+    SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
+    editor.putBoolean(TIME_SCALE_PREF, stopTimeScaleOnAlert);
+    editor.commit();
+  }
+
   private void setOutput(final String s) {
     runOnUiThread(new Runnable() {
 	@Override
@@ -161,7 +180,11 @@ public class MainActivity extends Activity
     try {
       JSONObject data = (JSONObject)(new JSONTokener(raw).nextValue());
       String bodyName = data.getString("v.body");
-      out += "[" + bodyName + "]\n";
+      out += "[" + bodyName + "]";
+      if (stopTimeScaleOnAlert) {
+	out += " [T]";
+      }
+      out += "\n";
       out += "Altitude: " + formatDouble(data.getDouble("v.altitude")) + "\n";
       out += "Velocity(orbit): " + formatDouble(data.getDouble("v.orbitalVelocity")) + "\n";
       out += "Speed(vert): " + formatDouble(data.getDouble("v.verticalSpeed")) + "\n";
@@ -274,7 +297,7 @@ public class MainActivity extends Activity
   /** @brief Requests a halt to timewarp.
    */
   private void stopTimeWarp() {
-    if (telemachus != null) {
+    if (stopTimeScaleOnAlert && (telemachus != null)) {
       telemachus.send("{\"run\":[\"t.timeWarp[0]\"]}");
     }
   }

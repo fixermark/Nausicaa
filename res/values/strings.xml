@@ -3,6 +3,7 @@
     <string name="app_name">MainActivity</string>
     <string name="data_source_activity">Data Source</string>
     <string name="set_telemetry_source">Set Telemetry Source</string>
+    <string name="toggle_time_scale">Toggle Alert Guard</string>
     <string name="change_hostname">Change Host</string>
     <string name="change_port">Change Port</string>
     <string name="cancel">Cancel</string>
