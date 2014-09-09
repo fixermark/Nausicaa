@@ -186,11 +186,11 @@ public class MainActivity extends Activity
       if (paused == 1) {
 	return "<<GAME PAUSED>>";
       }
-      if (paused == 2) {
+      // Bit o' "realism..." There's no way for ground control to distinguish
+      // between no carrier for missing ship and no carrier for missing
+      // antenna.
+      if (paused == 2 || paused == 3) {
 	return "<<NO CARRIER>>";
-      }
-      if (paused == 3) {
-	return "<<SIGNAL TERMINATED>>";
       }
       String bodyName = data.getString("v.body");
       out += "[" + bodyName + "]";
