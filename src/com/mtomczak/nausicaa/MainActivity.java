@@ -178,7 +178,20 @@ public class MainActivity extends Activity
   private String displayJson(String raw) {
     String out = "";
     try {
+      if (raw.equals("{}")) {
+	return "((Awaiting data...))";
+      }
       JSONObject data = (JSONObject)(new JSONTokener(raw).nextValue());
+      int paused = data.getInt("p.paused");
+      if (paused == 1) {
+	return "<<GAME PAUSED>>";
+      }
+      if (paused == 2) {
+	return "<<NO CARRIER>>";
+      }
+      if (paused == 3) {
+	return "<<SIGNAL TERMINATED>>";
+      }
       String bodyName = data.getString("v.body");
       out += "[" + bodyName + "]";
       if (stopTimeScaleOnAlert) {
@@ -246,7 +259,7 @@ public class MainActivity extends Activity
 	  @Override
 	    public void onOpen(ServerHandshake serverHandshake) {
 	    setOutput("Connected.");
-	    String sendString = "{\"+\":[\"v.body\",\"v.altitude\",\"v.orbitalVelocity\"," +
+	    String sendString = "{\"+\":[\"p.paused\",\"v.body\",\"v.altitude\",\"v.orbitalVelocity\"," +
 	      "\"v.verticalSpeed\",\"o.ApA\",\"o.PeA\"," +
 	      "\"r.resource[ElectricCharge]\",\"r.resourceMax[ElectricCharge]\"],\"rate\":500}";
 	    telemachus.send(sendString);
