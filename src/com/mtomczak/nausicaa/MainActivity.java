@@ -212,8 +212,6 @@ public class MainActivity extends Activity
       out += "Periapsis: " + formatDouble(periapsis) + "\n";
       if (apoapsis + periapsis != 0) {
 	double eccentricity = (apoapsis - periapsis) / (apoapsis + periapsis);
-	out += "Eccentricity: " +
-	  formatDouble(eccentricity) + "\n";
 	boolean circular = eccentricity > 0 && eccentricity < ECCENTRICITY_THRESHOLD;
 	if (circular && !circularOrbit) {
 	  say("Circular orbit achieved.");
@@ -237,7 +235,10 @@ public class MainActivity extends Activity
 	stopTimeWarp();
       }
       electricChargeUnderFiftyPercent = electricChargeLow;
-      out += "Electric %: " + formatDouble(electricChargePercent * 100);
+      out += "Electric %: " + formatDouble(electricChargePercent * 100) + "\n";
+      double fuel = data.getDouble("r.resource[LiquidFuel]");
+      double fuelMax = data.getDouble("r.resourceMax[LiquidFuel]");
+      out += "Fuel %: " + formatDouble(fuel / fuelMax * 100);
 
       return out;
     } catch(Exception e) {
@@ -261,7 +262,8 @@ public class MainActivity extends Activity
 	    setOutput("Connected.");
 	    String sendString = "{\"+\":[\"p.paused\",\"v.body\",\"v.altitude\",\"v.orbitalVelocity\"," +
 	      "\"v.verticalSpeed\",\"o.ApA\",\"o.PeA\"," +
-	      "\"r.resource[ElectricCharge]\",\"r.resourceMax[ElectricCharge]\"],\"rate\":500}";
+	      "\"r.resource[ElectricCharge]\",\"r.resource[LiquidFuel]\"," +
+	      "\"r.resourceMax[ElectricCharge]\",\"r.resourceMax[LiquidFuel]\"],\"rate\":500}";
 	    telemachus.send(sendString);
 	  }
 
