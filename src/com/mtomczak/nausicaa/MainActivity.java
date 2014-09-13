@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,32 +12,26 @@ import com.google.android.glass.view.WindowUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-public class MainActivity extends Activity
-  implements TextToSpeech.OnInitListener {
+public class MainActivity extends Activity {
   private TextView output;
-  private WebSocketClient telemachus = null;
-  private TextToSpeech tts = null;
-
-  private boolean circularOrbit = true;
-  private boolean atmosphericDragThreat = true;
-  private boolean electricChargeUnderFiftyPercent = false;
+  private Telemachus telemachus = null;
 
   private DataSource telemachusAddress = null;
-  private boolean stopTimeScaleOnAlert = true;
 
-  private HashMap<String, Double> atmosphericData = null;
+  private SpeechOutput tts = null;
+  private TimeWarpHaltOutput timeWarpHalt = null;
+  private Vector<StateNotifier> notifiers = new Vector<StateNotifier> ();
+
   private static final String ADDRESS_PREF="TelemachusAddress";
   private static final String TIME_SCALE_PREF = "StopTimeScaleOnAlert";
-  private static final double ECCENTRICITY_THRESHOLD = 0.09;
 
   public static final String DATASOURCE_INTENT =
     "com.mtomczak.nausicaa.DATASOURCE";
@@ -52,6 +45,11 @@ public class MainActivity extends Activity
     setContentView(R.layout.main);
     output = (TextView) findViewById(R.id.output);
     output.setKeepScreenOn(true);
+
+    telemachus = new Telemachus();
+    tts = new SpeechOutput(this);
+    timeWarpHalt = new TimeWarpHaltOutput(telemachus);
+
     SharedPreferences prefs = getPreferences(MODE_PRIVATE);
     if(prefs.contains(ADDRESS_PREF)) {
       try {
@@ -63,51 +61,61 @@ public class MainActivity extends Activity
     }
     if (prefs.contains(TIME_SCALE_PREF)) {
       try {
-	stopTimeScaleOnAlert = prefs.getBoolean(TIME_SCALE_PREF, true);
+	timeWarpHalt.setEnabled(prefs.getBoolean(TIME_SCALE_PREF, true));
       } catch (ClassCastException e) {
 	Log.e("Nausicaa", "Corrupt prefs: " + TIME_SCALE_PREF + "\n" + e.toString());
+	timeWarpHalt.setEnabled(true);
       }
     }
     if (telemachusAddress == null) {
       telemachusAddress = new DataSource("192.168.1.3", 8085);
     }
-    tts = new TextToSpeech(this, this);
-    initAtmosphericData();
+
+    initStateNotifiers();
   }
 
-  private void initAtmosphericData() {
-    atmosphericData = new HashMap();
-      // Moho has no atmosphere
-    atmosphericData.put("Eve", new Double(90000.0));
-      // Gilly has no atmosphere
-    atmosphericData.put("Kerbin", new Double(70000.0));
-      // Mun has no atmosphere
-      // Minmus has no atmosphere
-    atmosphericData.put("Duna", new Double(50000.0));
-      // Ike has no atmosphere
-    // Dres has no atmosphere
-    atmosphericData.put("Jool", new Double(200000.0));
-      atmosphericData.put("Laythe", new Double(50000.0));
-      // Vall has no atmosphere
-      // Tylo has no atmosphere
-      // Bop  has no atmosphere
-      // Pol  has no atmosphere
-    // Eeloo has no atmosphere
+  /**
+   * Initializes the state notifiers, which are used when telemetry comes in
+   * to determine if we need to send a notification to an output.
+   */
+  private void initStateNotifiers() {
+    Vector<OutputInterface> speak = new Vector<OutputInterface>();
+    speak.add(tts);
+
+    Vector<OutputInterface> speakAndKillTimeWarp =
+      new Vector<OutputInterface>(speak);
+    speakAndKillTimeWarp.add(timeWarpHalt);
+
+    notifiers.add(new StateNotifier(
+		    new StateChecks.CircularOrbit(),
+		    speak,
+		    "Circular orbit achieved."));
+    notifiers.add(new StateNotifier(
+		    new StateChecks.AtmosphereStrike(),
+		    speak,
+		    "Warning: orbit unstable; periapsis within atmosphere."));
+    notifiers.add(new StateNotifier(
+		    new StateChecks.ElectricityCritical(),
+		    speakAndKillTimeWarp,
+		    "Warning: Electric charge has fallen to under fifty percent."));
   }
 
-  // init for text to speech engine
-  @Override
-    public void onInit(int status) {
-    if (status == TextToSpeech.SUCCESS) {
-      int result = tts.setLanguage(Locale.US);
-    }
-  }
 
   @Override
     public void onDestroy() {
+    if (!notifiers.isEmpty()) {
+      notifiers.clear();
+    }
+    if (timeWarpHalt != null) {
+      timeWarpHalt = null;
+    }
     if (tts != null) {
       tts.stop();
-      tts.shutdown();
+      tts = null;
+    }
+    if (telemachus != null) {
+      telemachus.close();
+      telemachus = null;
     }
     super.onDestroy();
   }
@@ -155,9 +163,9 @@ public class MainActivity extends Activity
   }
 
   private void toggleStopTimeScalePreference() {
-    stopTimeScaleOnAlert = !stopTimeScaleOnAlert;
+    timeWarpHalt.setEnabled(!timeWarpHalt.getEnabled());
     SharedPreferences.Editor editor = getPreferences(MODE_PRIVATE).edit();
-    editor.putBoolean(TIME_SCALE_PREF, stopTimeScaleOnAlert);
+    editor.putBoolean(TIME_SCALE_PREF, timeWarpHalt.getEnabled());
     editor.commit();
   }
 
@@ -175,13 +183,9 @@ public class MainActivity extends Activity
   }
 
   // Formats the JSON-return data for the text view
-  private String displayJson(String raw) {
+  private String displayJson(JSONObject data) {
     String out = "";
     try {
-      if (raw.equals("{}")) {
-	return "((Awaiting data...))";
-      }
-      JSONObject data = (JSONObject)(new JSONTokener(raw).nextValue());
       int paused = data.getInt("p.paused");
       if (paused == 1) {
 	return "<<GAME PAUSED>>";
@@ -194,7 +198,7 @@ public class MainActivity extends Activity
       }
       String bodyName = data.getString("v.body");
       out += "[" + bodyName + "]";
-      if (stopTimeScaleOnAlert) {
+      if (timeWarpHalt.getEnabled()) {
 	out += " [T]";
       }
       out += "\n";
@@ -210,31 +214,9 @@ public class MainActivity extends Activity
       }
       double periapsis = data.getDouble("o.PeA");
       out += "Periapsis: " + formatDouble(periapsis) + "\n";
-      if (apoapsis + periapsis != 0) {
-	double eccentricity = (apoapsis - periapsis) / (apoapsis + periapsis);
-	boolean circular = eccentricity > 0 && eccentricity < ECCENTRICITY_THRESHOLD;
-	if (circular && !circularOrbit) {
-	  say("Circular orbit achieved.");
-	}
-	circularOrbit = circular;
-      }
-      if (atmosphericData.containsKey(bodyName)) {
-	boolean dragThreat = periapsis > 0 && periapsis <
-	  (atmosphericData.get(bodyName) * 0.75);
-	if (dragThreat && !atmosphericDragThreat) {
-	  say("Warning: orbit unstable; periapsis within atmosphere.");
-	}
-	atmosphericDragThreat = dragThreat;
-      }
       double electricCharge = data.getDouble("r.resource[ElectricCharge]");
       double electricChargeMax = data.getDouble("r.resourceMax[ElectricCharge]");
       double electricChargePercent = electricCharge / electricChargeMax;
-      boolean electricChargeLow = electricChargePercent < 0.5;
-      if (electricChargeLow && !electricChargeUnderFiftyPercent) {
-	say("Warning: Electric charge has fallen to under fifty percent.");
-	stopTimeWarp();
-      }
-      electricChargeUnderFiftyPercent = electricChargeLow;
       out += "Electric %: " + formatDouble(electricChargePercent * 100) + "\n";
       double fuel = data.getDouble("r.resource[LiquidFuel]");
       double fuelMax = data.getDouble("r.resourceMax[LiquidFuel]");
@@ -249,40 +231,43 @@ public class MainActivity extends Activity
 
   private void establishConnection() {
     try {
-      if (telemachus != null) {
-	telemachus.closeConnection(1000, "Success");
-	telemachus = null;
-      }
       Log.i("Nausicaa", "Establishing connection to " + telemachusAddress.getPath());
       output.setText("Establishing connection to " + telemachusAddress.getPath());
       URI uri = new URI("ws://" + telemachusAddress.getPath() + "/datalink");
-      telemachus = new WebSocketClient(uri) {
-	  @Override
-	    public void onOpen(ServerHandshake serverHandshake) {
-	    setOutput("Connected.");
-	    String sendString = "{\"+\":[\"p.paused\",\"v.body\",\"v.altitude\",\"v.orbitalVelocity\"," +
-	      "\"v.verticalSpeed\",\"o.ApA\",\"o.PeA\"," +
-	      "\"r.resource[ElectricCharge]\",\"r.resource[LiquidFuel]\"," +
-	      "\"r.resourceMax[ElectricCharge]\",\"r.resourceMax[LiquidFuel]\"],\"rate\":500}";
-	    telemachus.send(sendString);
-	  }
+      telemachus.establishConnection(
+	uri,
+	// message handler
+	new OutputInterface() {
+	  @Override public void output(String msg) {
+	    if (msg.equals("{}")) {
+	      setOutput("((Awaiting data...))");
+	    } else {
+	      try {
+		JSONObject telemetry = (JSONObject)(new JSONTokener(msg).nextValue());
+		setOutput(displayJson(telemetry));
 
-	  @Override
-	    public void onMessage(String s) {
-	    setOutput(displayJson(s));
+		for (StateNotifier notifier : notifiers) {
+		  notifier.check(telemetry);
+		}
+	      } catch(Exception e) {
+		Log.e("Nausicaa", e.toString());
+		setOutput("<<PARSE ERROR>>");
+	      }
+	    }
 	  }
-
-	  @Override
-	    public void onClose(int i, String s, boolean b) {
-	    setOutput("Closed: " + Integer.toString(i) + " " + s);
+	},
+	// close handler
+	new OutputInterface() {
+	  @Override public void output(String msg) {
+	    setOutput(msg);
 	  }
-
-	  @Override
-	    public void onError(Exception e) {
-	    setOutput(e.toString());
+	},
+	// error handler
+	new OutputInterface() {
+	  @Override public void output(String msg) {
+	    setOutput(msg);
 	  }
-	};
-      telemachus.connect();
+	});
     } catch (final URISyntaxException e) {
       setOutput("Error:\n" + e.toString());
     }
@@ -298,22 +283,7 @@ public class MainActivity extends Activity
     public void onPause() {
     super.onPause();
     if (telemachus != null) {
-      telemachus.closeConnection(1000, "Success");
-      telemachus = null;
-    }
-  }
-
-  private void say(String msg) {
-    if (tts != null) {
-      tts.speak(msg, TextToSpeech.QUEUE_ADD, null);
-    }
-  }
-
-  /** @brief Requests a halt to timewarp.
-   */
-  private void stopTimeWarp() {
-    if (stopTimeScaleOnAlert && (telemachus != null)) {
-      telemachus.send("{\"run\":[\"t.timeWarp[0]\"]}");
+      telemachus.close();
     }
   }
 }
