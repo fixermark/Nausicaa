@@ -1,5 +1,7 @@
 package com.mtomczak.nausicaa;
 
+import android.util.Log;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -61,6 +63,7 @@ public class Telemachus implements OutputInterface {
   @Override
     public void output(String msg) {
     if (telemachus != null) {
+      Log.i("Nausicaa", "Sending " + msg);
       telemachus.send(msg);
     }
   }

@@ -225,6 +225,11 @@ public class MainActivity extends Activity {
       return out;
     } catch(Exception e) {
       Log.e("Nausicaa", e.toString());
+      String trace = "";
+      for (StackTraceElement el: e.getStackTrace()) {
+	trace += el.toString();
+      }
+      Log.e("Nausicaa", trace);
       return "<<PARSE ERROR>>";
     }
   }
@@ -251,6 +256,11 @@ public class MainActivity extends Activity {
 		}
 	      } catch(Exception e) {
 		Log.e("Nausicaa", e.toString());
+		String trace = "";
+		for (StackTraceElement el: e.getStackTrace()) {
+		  trace += el.toString();
+		}
+		Log.e("Nausicaa", trace);
 		setOutput("<<PARSE ERROR>>");
 	      }
 	    }

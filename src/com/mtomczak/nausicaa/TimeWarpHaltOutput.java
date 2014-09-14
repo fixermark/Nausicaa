@@ -8,12 +8,12 @@ public class TimeWarpHaltOutput implements OutputInterface {
   private OutputInterface telemachus;  // Telemachus output channel.
 
   public TimeWarpHaltOutput(OutputInterface t) {
-    t = telemachus;
+    telemachus = t;
   }
 
   @Override
     public void output(String msg) {
-    if (enabled) {
+    if (enabled && (telemachus != null)) {
       telemachus.output("{\"run\":[\"t.timeWarp[0]\"]}");
     }
   }
