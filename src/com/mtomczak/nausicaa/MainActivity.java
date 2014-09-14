@@ -7,11 +7,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import com.google.android.glass.view.WindowUtils;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.DecimalFormat;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
@@ -21,7 +21,18 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 public class MainActivity extends Activity {
-  private TextView output;
+  private AlertView alertView;
+  private StatusView statusView;
+  private DockingView dockingView;
+
+  public enum NausicaaSubview {
+    STATUS,
+    DOCKING
+  }
+
+  private NausicaaSubview currentSubview = NausicaaSubview.STATUS;
+
+  private Vector<TelemetryViewer> telemetryViewers = new Vector<TelemetryViewer>();
   private Telemachus telemachus = null;
 
   private DataSource telemachusAddress = null;
@@ -43,8 +54,16 @@ public class MainActivity extends Activity {
 
     getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
     setContentView(R.layout.main);
-    output = (TextView) findViewById(R.id.output);
-    output.setKeepScreenOn(true);
+
+    // Wire up the views
+    alertView = (AlertView) findViewById(R.id.alertview);
+    statusView = (StatusView) findViewById(R.id.statusview);
+    dockingView = (DockingView) findViewById(R.id.dockingview);
+    statusView.setAlertOutput(alertView);
+    dockingView.setAlertOutput(alertView);
+    telemetryViewers.add(alertView);
+    telemetryViewers.add(statusView);
+    telemetryViewers.add(dockingView);
 
     telemachus = new Telemachus();
     tts = new SpeechOutput(this);
@@ -130,6 +149,22 @@ public class MainActivity extends Activity {
   }
 
   @Override
+    public boolean onPreparePanel(int featureId, View view, Menu menu) {
+    if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
+      MenuItem status = menu.findItem(R.id.status_view_option);
+      status.setVisible(currentSubview != NausicaaSubview.STATUS);
+      status.setEnabled(currentSubview != NausicaaSubview.STATUS);
+
+      MenuItem docking = menu.findItem(R.id.docking_view_option);
+      docking.setVisible(currentSubview != NausicaaSubview.DOCKING);
+      docking.setEnabled(currentSubview != NausicaaSubview.DOCKING);
+
+      return true;
+    }
+    return super.onPreparePanel(featureId, view, menu);
+  }
+
+  @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
     if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
       if (item.getItemId() == R.id.set_telemetry_source_option) {
@@ -140,6 +175,12 @@ public class MainActivity extends Activity {
       }
       if (item.getItemId() == R.id.toggle_time_scale_option) {
 	toggleStopTimeScalePreference();
+      }
+      if (item.getItemId() == R.id.docking_view_option) {
+	showSubview(NausicaaSubview.DOCKING);
+      }
+      if (item.getItemId() == R.id.status_view_option) {
+	showSubview(NausicaaSubview.STATUS);
       }
     }
     return true;
@@ -169,75 +210,22 @@ public class MainActivity extends Activity {
     editor.commit();
   }
 
-  private void setOutput(final String s) {
+  /**
+   * Shows an alert in the UI.
+   */
+  private void alert(final String s) {
     runOnUiThread(new Runnable() {
 	@Override
 	  public void run() {
-	  output.setText(s);
+	  alertView.alert(s);
 	}
       });
-  }
-
-  private String formatDouble(double in) {
-    return new DecimalFormat("#,000.##").format(in);
-  }
-
-  // Formats the JSON-return data for the text view
-  private String displayJson(JSONObject data) {
-    String out = "";
-    try {
-      int paused = data.getInt("p.paused");
-      if (paused == 1) {
-	return "<<GAME PAUSED>>";
-      }
-      // Bit o' "realism..." There's no way for ground control to distinguish
-      // between no carrier for missing ship and no carrier for missing
-      // antenna.
-      if (paused == 2 || paused == 3) {
-	return "<<NO CARRIER>>";
-      }
-      String bodyName = data.getString("v.body");
-      out += "[" + bodyName + "]";
-      if (timeWarpHalt.getEnabled()) {
-	out += " [T]";
-      }
-      out += "\n";
-      out += "Altitude: " + formatDouble(data.getDouble("v.altitude")) + "\n";
-      out += "Velocity(orbit): " + formatDouble(data.getDouble("v.orbitalVelocity")) + "\n";
-      out += "Speed(vert): " + formatDouble(data.getDouble("v.verticalSpeed")) + "\n";
-      out += "Apoapsis: ";
-      double apoapsis = data.getDouble("o.ApA");
-      if (apoapsis < 0) {
-	out += "[escaping]\n";
-      } else {
-	out += formatDouble(data.getDouble("o.ApA")) + "\n";
-      }
-      double periapsis = data.getDouble("o.PeA");
-      out += "Periapsis: " + formatDouble(periapsis) + "\n";
-      double electricCharge = data.getDouble("r.resource[ElectricCharge]");
-      double electricChargeMax = data.getDouble("r.resourceMax[ElectricCharge]");
-      double electricChargePercent = electricCharge / electricChargeMax;
-      out += "Electric %: " + formatDouble(electricChargePercent * 100) + "\n";
-      double fuel = data.getDouble("r.resource[LiquidFuel]");
-      double fuelMax = data.getDouble("r.resourceMax[LiquidFuel]");
-      out += "Fuel %: " + formatDouble(fuel / fuelMax * 100);
-
-      return out;
-    } catch(Exception e) {
-      Log.e("Nausicaa", e.toString());
-      String trace = "";
-      for (StackTraceElement el: e.getStackTrace()) {
-	trace += el.toString();
-      }
-      Log.e("Nausicaa", trace);
-      return "<<PARSE ERROR>>";
-    }
   }
 
   private void establishConnection() {
     try {
       Log.i("Nausicaa", "Establishing connection to " + telemachusAddress.getPath());
-      output.setText("Establishing connection to " + telemachusAddress.getPath());
+      alert("Establishing connection to " + telemachusAddress.getPath());
       URI uri = new URI("ws://" + telemachusAddress.getPath() + "/datalink");
       telemachus.establishConnection(
 	uri,
@@ -245,11 +233,22 @@ public class MainActivity extends Activity {
 	new OutputInterface() {
 	  @Override public void output(String msg) {
 	    if (msg.equals("{}")) {
-	      setOutput("((Awaiting data...))");
+	      alert("((Awaiting data...))");
 	    } else {
 	      try {
-		JSONObject telemetry = (JSONObject)(new JSONTokener(msg).nextValue());
-		setOutput(displayJson(telemetry));
+		final JSONObject telemetry =
+		  (JSONObject)(new JSONTokener(msg).nextValue());
+		// Doctor telemetry with state values of the app itself
+		telemetry.put(StatusView.TIME_WARP_KEY, timeWarpHalt.getEnabled());
+
+		runOnUiThread(new Runnable() {
+		    @Override
+		      public void run() {
+		      for (TelemetryViewer viewer : telemetryViewers) {
+			viewer.update(telemetry);
+		      }
+		    }
+		  });
 
 		for (StateNotifier notifier : notifiers) {
 		  notifier.check(telemetry);
@@ -261,7 +260,7 @@ public class MainActivity extends Activity {
 		  trace += el.toString();
 		}
 		Log.e("Nausicaa", trace);
-		setOutput("<<PARSE ERROR>>");
+		alert("<<PARSE ERROR>>");
 	      }
 	    }
 	  }
@@ -269,18 +268,29 @@ public class MainActivity extends Activity {
 	// close handler
 	new OutputInterface() {
 	  @Override public void output(String msg) {
-	    setOutput(msg);
+	    alert(msg);
 	  }
 	},
 	// error handler
 	new OutputInterface() {
 	  @Override public void output(String msg) {
-	    setOutput(msg);
+	    alert(msg);
 	  }
 	});
     } catch (final URISyntaxException e) {
-      setOutput("Error:\n" + e.toString());
+      alert("Error:\n" + e.toString());
     }
+  }
+
+  /**
+   * Selects which subview is currently shown
+   */
+  public void showSubview(NausicaaSubview view) {
+    statusView.setVisibility(view == NausicaaSubview.STATUS ?
+			     View.VISIBLE : View.GONE);
+    dockingView.setVisibility(view == NausicaaSubview.DOCKING ?
+			      View.VISIBLE : View.GONE);
+    currentSubview = view;
   }
 
   @Override

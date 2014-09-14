@@ -6,5 +6,7 @@
     <string name="toggle_time_scale">Toggle Alert Guard</string>
     <string name="change_hostname">Change Host</string>
     <string name="change_port">Change Port</string>
+    <string name="docking_view">Docking View</string>
+    <string name="status_view">Status View</string>
     <string name="cancel">Cancel</string>
 </resources>
