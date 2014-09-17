@@ -30,7 +30,11 @@ public class Telemachus implements OutputInterface {
 	    "\"v.orbitalVelocity\"," +
 	    "\"v.verticalSpeed\",\"o.ApA\",\"o.PeA\"," +
 	    "\"r.resource[ElectricCharge]\",\"r.resource[LiquidFuel]\"," +
-	    "\"r.resourceMax[ElectricCharge]\",\"r.resourceMax[LiquidFuel]\"]," +
+	    "\"r.resourceMax[ElectricCharge]\"," +
+	    "\"r.resourceMax[LiquidFuel]\"," +
+	    "\"r.resource[MonoPropellant]\"," +
+	    "\"r.resourceMax[MonoPropellant]\"," +
+	    "\"dock.ax\",\"dock.ay\"]," +
 	    "\"rate\":500}";
 	  telemachus.send(sendString);
 	}

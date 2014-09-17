@@ -35,7 +35,35 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:visibility="gone"
-	/>
+	>
+      <LinearLayout
+	  android:layout_alignParentTop="true"
+	  android:orientation="horizontal"
+	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  >
+	<com.mtomczak.nausicaa.Dial
+	    android:id="@+id/verticaldial"
+	    android:layout_width="0dp"
+	    android:layout_height="0dp"
+	    android:layout_weight="1"
+	    />
+	<com.mtomczak.nausicaa.Dial
+	    android:id="@+id/horizontaldial"
+	    android:layout_width="0dp"
+	    android:layout_height="0dp"
+	    android:layout_weight="1"
+	    />
+      </LinearLayout>
+      <TextView
+	  android:id="@+id/rcsfuel"
+	  android:layout_alignParentBottom="True"
+	  android:layout_width="fill_parent"
+	  android:layout_height="21sp"
+	  android:paddingLeft=".2in"
+	  android:textSize="18sp"
+	  />
+    </com.mtomczak.nausicaa.DockingView>
   </LinearLayout>
 </com.mtomczak.nausicaa.AlertView>
 
