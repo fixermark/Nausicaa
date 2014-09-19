@@ -67,8 +67,8 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
 
   // TODO(mtomczak): Allow dials to take in Path objects to render, and bake the paths here.
   private AlertView alertOutput = null;
-  private Dial horizontalDial = null;
-  private Dial verticalDial = null;
+  private Dial pitchDial = null;
+  private Dial yawDial = null;
   private TextView rcsFuel = null;
   private Path pitchImage = null;
   private Path yawImage = null;
@@ -79,15 +79,15 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
 
   @Override
     protected void onFinishInflate() {
-    horizontalDial = (Dial)findViewById(R.id.horizontaldial);
-    verticalDial = (Dial)findViewById(R.id.verticaldial);
+    pitchDial = (Dial)findViewById(R.id.horizontaldial);
+    yawDial = (Dial)findViewById(R.id.verticaldial);
     rcsFuel = (TextView)findViewById(R.id.rcsfuel);
 
-    horizontalDial.setOffset(-90);
-    horizontalDial.setIcon(encodePath(YAW_IMAGE));
-    verticalDial.setOffset(180);
-    verticalDial.setFlip(true);
-    verticalDial.setIcon(encodePath(PITCH_IMAGE));
+    pitchDial.setOffset(-90);
+    pitchDial.setIcon(encodePath(YAW_IMAGE));
+    yawDial.setOffset(180);
+    yawDial.setFlip(true);
+    yawDial.setIcon(encodePath(PITCH_IMAGE));
 
     super.onFinishInflate();
   }
@@ -120,8 +120,8 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
     try {
       double rcsFuelVal = telemetry.getDouble("r.resource[MonoPropellant]");
       double rcsFuelMax = telemetry.getDouble("r.resourceMax[MonoPropellant]");
-      horizontalDial.update(telemetry.getDouble("dock.ax"));
-      verticalDial.update(telemetry.getDouble("dock.ay"));
+      pitchDial.update(telemetry.getDouble("dock.ax"));
+      yawDial.update(telemetry.getDouble("dock.ay"));
 
 
       if (rcsFuelMax > 0) {
