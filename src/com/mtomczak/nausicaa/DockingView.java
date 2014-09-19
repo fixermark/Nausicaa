@@ -3,6 +3,7 @@ package com.mtomczak.nausicaa;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ViewGroup;
@@ -17,51 +18,51 @@ import org.json.JSONException;
  */
 public class DockingView extends RelativeLayout implements TelemetryViewer {
   private static final float[] PITCH_IMAGE = {
-    70, 232.5,
-    83, 226.5,
-    96, 213.5,
-    101, 200.5,
-    281, 200.5,
-    315, 152.5,
-    330, 152.5,
-    315, 198.5,
-    307, 207.5,
-    324, 204.5,
-    324, 225.5,
-    306, 220.5,
-    314, 228.5,
-    227, 228.5,
-    242, 247.5,
-    203, 247.5,
-    170, 228.5,
-    70, 234.5
+    70f, 220.5f,
+    83f, 214.5f,
+    96f, 201.5f,
+    101f, 188.5f,
+    281f, 188.5f,
+    315f, 140.5f,
+    330f, 140.5f,
+    315f, 186.5f,
+    307f, 195.5f,
+    324f, 192.5f,
+    324f, 213.5f,
+    306f, 208.5f,
+    314f, 216.5f,
+    227f, 216.5f,
+    242f, 235.5f,
+    203f, 235.5f,
+    170f, 216.5f,
+    70f, 222.5f
     };
 
   private static final float[] YAW_IMAGE = {
-    200, 102,
-    210, 102,
-    216, 118,
-    216, 205,
-    219, 213,
-    265, 259,
-    268, 268,
-    267, 277,
-    214, 277,
-    221, 298,
-    203, 298,
-    205, 273,
-    195, 273,
-    197, 298,
-    179, 298,
-    186, 277,
-    133, 277,
-    132, 268,
-    135, 259,
-    181, 213,
-    184, 205,
-    184, 118,
-    190, 102,
-    200, 102,
+    200f, 102f,
+    210f, 102f,
+    216f, 118f,
+    216f, 205f,
+    219f, 213f,
+    265f, 259f,
+    268f, 268f,
+    267f, 277f,
+    214f, 277f,
+    221f, 298f,
+    203f, 298f,
+    205f, 273f,
+    195f, 273f,
+    197f, 298f,
+    179f, 298f,
+    186f, 277f,
+    133f, 277f,
+    132f, 268f,
+    135f, 259f,
+    181f, 213f,
+    184f, 205f,
+    184f, 118f,
+    190f, 102f,
+    200f, 102f,
   };
 
   // TODO(mtomczak): Allow dials to take in Path objects to render, and bake the paths here.
@@ -69,6 +70,8 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
   private Dial horizontalDial = null;
   private Dial verticalDial = null;
   private TextView rcsFuel = null;
+  private Path pitchImage = null;
+  private Path yawImage = null;
 
   public DockingView(Context context, AttributeSet attrs) {
     super(context, attrs);
@@ -81,10 +84,29 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
     rcsFuel = (TextView)findViewById(R.id.rcsfuel);
 
     horizontalDial.setOffset(-90);
+    horizontalDial.setIcon(encodePath(YAW_IMAGE));
     verticalDial.setOffset(180);
     verticalDial.setFlip(true);
+    verticalDial.setIcon(encodePath(PITCH_IMAGE));
 
     super.onFinishInflate();
+  }
+
+  /**
+   * Encode a list of x,y coords into a path
+   *
+   * @param points Points to encode
+   * @return The encoded path
+   */
+  private Path encodePath(float[] points) {
+    Path path = new Path();
+    path.moveTo(points[0], points[1]);
+    for (int i = 2; i < points.length; i += 2) {
+      path.lineTo(points[i], points[i + 1]);
+    }
+    path.close();
+    path.setFillType(Path.FillType.WINDING);
+    return path;
   }
 
   public void setAlertOutput(AlertView view) {

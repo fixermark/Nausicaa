@@ -3,6 +3,7 @@ package com.mtomczak.nausicaa;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
@@ -30,6 +31,7 @@ class Dial extends View {
   private double reading = 0;
   private double offset = 0;
   private boolean flip = false;
+  private Path icon = null;
 
   public Dial(Context ctx, AttributeSet attrs) {
     super(ctx, attrs);
@@ -41,6 +43,16 @@ class Dial extends View {
 
   public void setFlip(boolean f) {
     flip = f;
+  }
+
+  /**
+   * Set the icon displayed in the center of the dial.
+   * Note: It is assumed the icon image is 400 x 400.
+   *
+   * @param p The path to use as an icon.
+   */
+  public void setIcon(Path p) {
+    icon = p;
   }
 
   public void update(double r) {
@@ -77,6 +89,17 @@ class Dial extends View {
       }
     }
     canvas.drawLine(centerX, centerY, px, py, p);
+
+    if (icon != null) {
+      float sx = (float)(width) / 400;
+      float sy = (float)(height) / 400;
+      canvas.scale(sx, sy);
+      //      canvas.translate(-200, -200);//-centerX, -centerY);
+      p.setColor(DIAL_FRAME_COLOR);
+      p.setStyle(Paint.Style.FILL_AND_STROKE);
+      canvas.drawPath(icon, p);
+      canvas.setMatrix(null);
+    }
   }
 
   @Override
