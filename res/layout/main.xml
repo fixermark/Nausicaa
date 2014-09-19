@@ -14,7 +14,7 @@
     android:textSize="18sp"
     android:text="[errors]"
     android:tag="alertText"
-    android:textColor="#580000"
+    android:textColor="#660066"
     />
   <LinearLayout
       android:tag="childViews"
@@ -37,6 +37,7 @@
 	android:visibility="gone"
 	>
       <LinearLayout
+	  android:id="@+id/dials"
 	  android:layout_alignParentTop="true"
 	  android:orientation="horizontal"
 	  android:layout_width="fill_parent"
@@ -49,20 +50,42 @@
 	    android:layout_weight="1"
 	    />
 	<com.mtomczak.nausicaa.Dial
+	    android:layout_width="0dp"
+	    android:layout_height="0dp"
+	    android:layout_weight="1"
+	    />
+	<com.mtomczak.nausicaa.Dial
 	    android:id="@+id/horizontaldial"
 	    android:layout_width="0dp"
 	    android:layout_height="0dp"
 	    android:layout_weight="1"
 	    />
       </LinearLayout>
-      <TextView
-	  android:id="@+id/rcsfuel"
-	  android:layout_alignParentBottom="True"
+      <LinearLayout
+	  android:layout_below="@id/dials"
+	  android:orientation="horizontal"
 	  android:layout_width="fill_parent"
+	  android:layout_height="wrap_content"
+	  >
+      <TextView
+	  android:id="@+id/targetdistance"
+	  android:layout_width="0dp"
 	  android:layout_height="21sp"
+	  android:layout_weight="1"
 	  android:paddingLeft=".2in"
 	  android:textSize="18sp"
 	  />
+      <TextView
+	  android:id="@+id/rcsfuel"
+	  android:layout_width="0dp"
+	  android:layout_height="21sp"
+	  android:layout_weight="1"
+	  android:paddingRight=".2in"
+	  android:textSize="18sp"
+	  android:gravity="right"
+	  android:textAlignment="gravity"
+	  />
+      </LinearLayout>
     </com.mtomczak.nausicaa.DockingView>
   </LinearLayout>
 </com.mtomczak.nausicaa.AlertView>

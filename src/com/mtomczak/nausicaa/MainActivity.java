@@ -17,6 +17,7 @@ import java.util.TimerTask;
 import java.util.Vector;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -87,7 +88,7 @@ public class MainActivity extends Activity {
       }
     }
     if (telemachusAddress == null) {
-      telemachusAddress = new DataSource("192.168.1.3", 8085);
+      telemachusAddress = new DataSource("192.168.1.4", 8085);
     }
 
     initStateNotifiers();
@@ -169,18 +170,18 @@ public class MainActivity extends Activity {
     if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
       if (item.getItemId() == R.id.set_telemetry_source_option) {
 
-	Intent intent = new Intent(getBaseContext(), DataSourceActivity.class);
-	intent.putExtra(DATASOURCE_INTENT, telemachusAddress.getPath());
-	startActivityForResult(intent, 0);
+    	Intent intent = new Intent(getBaseContext(), DataSourceActivity.class);
+    	intent.putExtra(DATASOURCE_INTENT, telemachusAddress.getPath());
+    	startActivityForResult(intent, 0);
       }
       if (item.getItemId() == R.id.toggle_time_scale_option) {
-	toggleStopTimeScalePreference();
+    	toggleStopTimeScalePreference();
       }
       if (item.getItemId() == R.id.docking_view_option) {
-	showSubview(NausicaaSubview.DOCKING);
+    	showSubview(NausicaaSubview.DOCKING);
       }
       if (item.getItemId() == R.id.status_view_option) {
-	showSubview(NausicaaSubview.STATUS);
+    	showSubview(NausicaaSubview.STATUS);
       }
     }
     return true;
@@ -215,10 +216,10 @@ public class MainActivity extends Activity {
    */
   private void alert(final String s) {
     runOnUiThread(new Runnable() {
-	@Override
-	  public void run() {
+    	@Override
+    	  public void run() {
 	  alertView.alert(s);
-	}
+      	}
       });
   }
 
@@ -247,13 +248,23 @@ public class MainActivity extends Activity {
 		      for (TelemetryViewer viewer : telemetryViewers) {
 			viewer.update(telemetry);
 		      }
+		      try {
+			for (StateNotifier notifier : notifiers) {
+			  notifier.check(telemetry);
+			}
+		      } catch(JSONException e) {
+			Log.e("Nausicaa", e.toString());
+			String trace = "";
+			for (StackTraceElement el: e.getStackTrace()) {
+			  trace += el.toString();
+			}
+			Log.e("Nausicaa", trace);
+			alert("<<PARSE ERROR>>");
+		      }
 		    }
 		  });
 
-		for (StateNotifier notifier : notifiers) {
-		  notifier.check(telemetry);
-		}
-	      } catch(Exception e) {
+	      } catch(JSONException e) {
 		Log.e("Nausicaa", e.toString());
 		String trace = "";
 		for (StackTraceElement el: e.getStackTrace()) {

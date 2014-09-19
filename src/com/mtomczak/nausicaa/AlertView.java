@@ -1,6 +1,7 @@
 package com.mtomczak.nausicaa;
 
 import android.content.Context;
+import android.os.Looper;
 import android.view.View;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -64,8 +65,8 @@ public class AlertView extends LinearLayout implements TelemetryViewer {
    * @param visible If true, alert will show and suppress other views.
    */
   private void setAlertVisible(boolean visible) {
-    alertText.setVisibility(visible ? View.VISIBLE : View.GONE);
-    childViews.setVisibility(visible ? View.GONE : View.VISIBLE);
+      alertText.setVisibility(visible ? View.VISIBLE : View.GONE);
+      childViews.setVisibility(visible ? View.GONE : View.VISIBLE);
   }
 
   /**
@@ -73,6 +74,7 @@ public class AlertView extends LinearLayout implements TelemetryViewer {
    * @param msg Error text to display.
    */
   public void alert(String msg) {
+    Log.w("Nausicaa", "Alert");
     alertText.setText(msg);
     setAlertVisible(true);
   }

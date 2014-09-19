@@ -69,6 +69,7 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
   private AlertView alertOutput = null;
   private Dial pitchDial = null;
   private Dial yawDial = null;
+  private TextView targetDistance = null;
   private TextView rcsFuel = null;
   private Path pitchImage = null;
   private Path yawImage = null;
@@ -81,6 +82,7 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
     protected void onFinishInflate() {
     pitchDial = (Dial)findViewById(R.id.horizontaldial);
     yawDial = (Dial)findViewById(R.id.verticaldial);
+    targetDistance = (TextView)findViewById(R.id.targetdistance);
     rcsFuel = (TextView)findViewById(R.id.rcsfuel);
 
     pitchDial.setOffset(-90);
@@ -118,10 +120,15 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
     // TODO(mtomczak): Need to account for all 0s, indicating no docking target
     // set.
     try {
+      double distance = telemetry.getDouble("tar.distance");
       double rcsFuelVal = telemetry.getDouble("r.resource[MonoPropellant]");
       double rcsFuelMax = telemetry.getDouble("r.resourceMax[MonoPropellant]");
       pitchDial.update(telemetry.getDouble("dock.ax"));
       yawDial.update(telemetry.getDouble("dock.ay"));
+
+      targetDistance.setText(
+	"Distance: " +
+	new DecimalFormat("#,###.##").format(distance) + "m");
 
 
       if (rcsFuelMax > 0) {
@@ -130,9 +137,9 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
 	  new DecimalFormat("000.##").format(
 	    rcsFuelVal / rcsFuelMax * 100.0) + "%");
       } else {
-	rcsFuel.setText("");
+      	rcsFuel.setText("");
       }
-      invalidate();
+      postInvalidate();
     } catch(JSONException e) {
       Log.e("Nausicaa", e.toString());
       String trace = "";

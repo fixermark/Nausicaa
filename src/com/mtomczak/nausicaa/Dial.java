@@ -18,9 +18,9 @@ class Dial extends View {
   public static final float DIAL_NEEDLE_THICKNESS = 2.0f;
   public static final float DIAL_PADDING = 3.0f;
   public static final int[] DIAL_NEEDLE_COLORS = {
-    0xFFFF0000,
-    0xFFFFFF00,
-    0xFF00FF00
+    0xFF660066,
+    0xFF990099,
+    0xFF009900
   };
   public static final double[] DIAL_THRESHOLDS = {
     20.0,
@@ -73,6 +73,7 @@ class Dial extends View {
     double angle = Math.toRadians((reading + offset) * (flip ? -1.0 : 1.0));
 
     Paint p = new Paint();
+    p.setXfermode(null);
     p.setStrokeWidth(DIAL_FRAME_THICKNESS);
     p.setStyle(Paint.Style.STROKE);
     p.setColor(DIAL_FRAME_COLOR);
