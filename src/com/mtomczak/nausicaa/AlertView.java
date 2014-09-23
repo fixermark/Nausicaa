@@ -74,7 +74,6 @@ public class AlertView extends LinearLayout implements TelemetryViewer {
    * @param msg Error text to display.
    */
   public void alert(String msg) {
-    Log.w("Nausicaa", "Alert");
     alertText.setText(msg);
     setAlertVisible(true);
   }

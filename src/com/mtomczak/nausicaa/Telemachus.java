@@ -34,7 +34,8 @@ public class Telemachus implements OutputInterface {
 	    "\"r.resourceMax[LiquidFuel]\"," +
 	    "\"r.resource[MonoPropellant]\"," +
 	    "\"r.resourceMax[MonoPropellant]\"," +
-	    "\"dock.ax\",\"dock.ay\",\"tar.distance\"]," +
+	    "\"dock.ax\",\"dock.ay\",\"tar.distance\"," +
+	    "\"dock.x\",\"dock.y\"]," +
 	    "\"rate\":500}";
 	  telemachus.send(sendString);
 	}

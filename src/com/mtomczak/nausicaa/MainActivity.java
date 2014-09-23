@@ -151,6 +151,7 @@ public class MainActivity extends Activity {
 
   @Override
     public boolean onPreparePanel(int featureId, View view, Menu menu) {
+
     if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS) {
       MenuItem status = menu.findItem(R.id.status_view_option);
       status.setVisible(currentSubview != NausicaaSubview.STATUS);

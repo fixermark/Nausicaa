@@ -6,13 +6,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.view.View;
 
 /**
  * An indicator dial
  */
 
-class Dial extends View {
+class Dial extends GraphicPanel {
   public static final int DIAL_FRAME_COLOR = 0xFF666666;
   public static final float DIAL_FRAME_THICKNESS = 3.0f;
   public static final float DIAL_NEEDLE_THICKNESS = 2.0f;
@@ -101,11 +100,5 @@ class Dial extends View {
       canvas.drawPath(icon, p);
       canvas.setMatrix(null);
     }
-  }
-
-  @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    // Square off the dials by width
-    setMeasuredDimension(widthMeasureSpec, widthMeasureSpec);
   }
 }

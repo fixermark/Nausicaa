@@ -69,7 +69,7 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
   private AlertView alertOutput = null;
   private Dial pitchDial = null;
   private Dial yawDial = null;
-  private TextView targetDistance = null;
+  private TextView dockData = null;
   private TextView rcsFuel = null;
   private Path pitchImage = null;
   private Path yawImage = null;
@@ -82,8 +82,7 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
     protected void onFinishInflate() {
     pitchDial = (Dial)findViewById(R.id.horizontaldial);
     yawDial = (Dial)findViewById(R.id.verticaldial);
-    targetDistance = (TextView)findViewById(R.id.targetdistance);
-    rcsFuel = (TextView)findViewById(R.id.rcsfuel);
+    dockData= (TextView)findViewById(R.id.dockdata);
 
     pitchDial.setOffset(-90);
     pitchDial.setIcon(encodePath(YAW_IMAGE));
@@ -121,24 +120,29 @@ public class DockingView extends RelativeLayout implements TelemetryViewer {
     // set.
     try {
       double distance = telemetry.getDouble("tar.distance");
+      double xDistance = telemetry.getDouble("dock.x");
+      double yDistance = telemetry.getDouble("dock.y");
+      // TODO(mtomczak): Need better window shading for no selected dock target.
+      // if (xDistance == 0 && yDistance == 0) {
+      // 	if (alertOutput != null) {
+      // 	  alertOutput.alert("[No docking target selected]");
+      // 	}
+      // 	return;
+      // }
       double rcsFuelVal = telemetry.getDouble("r.resource[MonoPropellant]");
       double rcsFuelMax = telemetry.getDouble("r.resourceMax[MonoPropellant]");
       pitchDial.update(telemetry.getDouble("dock.ax"));
       yawDial.update(telemetry.getDouble("dock.ay"));
 
-      targetDistance.setText(
-	"Distance: " +
-	new DecimalFormat("#,###.##").format(distance) + "m");
-
+      String output = "\nDistance:\n" +
+	new DecimalFormat("#,###.##").format(distance) + "m";
 
       if (rcsFuelMax > 0) {
-	rcsFuel.setText(
-	  "RCS fuel: " +
+	output += "\n\nRCS fuel:\n" +
 	  new DecimalFormat("000.##").format(
-	    rcsFuelVal / rcsFuelMax * 100.0) + "%");
-      } else {
-      	rcsFuel.setText("");
+	    rcsFuelVal / rcsFuelMax * 100.0) + "%";
       }
+      dockData.setText(output);
       postInvalidate();
     } catch(JSONException e) {
       Log.e("Nausicaa", e.toString());
