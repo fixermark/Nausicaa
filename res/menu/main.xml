@@ -1,0 +1,16 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+  <item
+      android:id="@+id/set_telemetry_source_option"
+      android:title="@string/set_telemetry_source"/>
+  <item
+      android:id="@+id/toggle_time_scale_option"
+      android:title="@string/toggle_time_scale"/>
+  <item
+      android:id="@+id/docking_view_option"
+      android:title="@string/docking_view"/>
+  <item
+      android:id="@+id/status_view_option"
+      android:title="@string/status_view"/>
+  <item
+      android:title="@string/cancel"/>
+</menu>
