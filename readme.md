@@ -72,8 +72,9 @@ Bugs
 
 **It didn't work!**
 
-If you're having issues, definitely submit a bug report on the Github page, and I'll look into it. Alternatively, you can reach me
-by email at iam+nausicaa@fixermark.com
+If you're having issues, definitely submit a bug report on the
+[issue tracker](https://github.com/fixermark/Nausicaa/issues), and I'll look
+into it. Alternatively, you can reach me by email at iam+nausicaa@fixermark.com
 
 **These colors are weird**
 
