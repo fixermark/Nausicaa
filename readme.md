@@ -33,6 +33,13 @@ How To Use
 P.A.Q. (Preemptively-asked questions)
 =====================================
 
+Compatibility
+-------------
+**What version of Telemachus / Kerbal Space Program will this work with?**
+
+Tested with KSP 0.24 and Telemachus v.1.4.25.0. I don't anticipate compatibility issues with future versions of Telemachus / KSP,
+but your mileage may vary.
+
 Platform
 --------
 
