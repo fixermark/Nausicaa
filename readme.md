@@ -15,19 +15,23 @@ Features
 How To Use
 ==========
 
-  1. Install Kerbal Space Program
-  2. Install the Telemachus Plugin ([github project](https://github.com/richardbunt/Telemachus),
-     [releases](https://github.com/richardbunt/Telemachus/releases))
-  3. Compile and side-load Nausicaa into your Google Glass ([compile guide](https://developers.google.com/glass/develop/gdk/quick-start),
-     [side-load tips](http://glassappz.com/ten-easy-steps-to-side-load-an-app-to-google-glass/))
-  4. Run Kerbal Space Program, build a craft that includes the Telemachus components, and start the mission.
-  5. Launch Nausicaa ("OK Glass, start a flight")
-  6. Set up Nausicaa to point to your Telemachus instance:
-    a. Set the telemetry source ("OK Glass, set telemetry source")
-    b. Choose IP host ("OK Glass, Change Host.... one nine two dot one six eight dot one dot two")
-    c. Choose IP port ("OK Glass, Change Port.... eight zero eight zero")
-    d. Swipe down to return to the main view
-  7. You should now see critical information about your ship in the main Telemachus view!
+  <ol>
+  <li>Install Kerbal Space Program</li>
+  <li>Install the Telemachus Plugin ([github project](https://github.com/richardbunt/Telemachus),
+     [releases](https://github.com/richardbunt/Telemachus/releases))</li>
+  <li>Compile and side-load Nausicaa into your Google Glass ([compile guide](https://developers.google.com/glass/develop/gdk/quick-start),
+     [side-load tips](http://glassappz.com/ten-easy-steps-to-side-load-an-app-to-google-glass/))</li>
+  <li>Run Kerbal Space Program, build a craft that includes the Telemachus components, and start the mission.</li>
+  <li>Launch Nausicaa ("OK Glass, start a flight")</li>
+  <li>Set up Nausicaa to point to your Telemachus instance:</li>
+    <ol>
+    <li>Set the telemetry source ("OK Glass, set telemetry source")</li>
+    <li>Choose IP host ("OK Glass, Change Host.... one nine two dot one six eight dot one dot two")</li>
+    <li>Choose IP port ("OK Glass, Change Port.... eight zero eight zero")</li>
+    <li>Swipe down to return to the main view</li>
+    </ol>
+  <li> You should now see critical information about your ship in the main Telemachus view!</li>
+  </ol>
 
 
 P.A.Q. (Preemptively-asked questions)
