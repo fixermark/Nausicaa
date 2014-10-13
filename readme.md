@@ -3,6 +3,8 @@ Nausicaa
 
 A Google Glass client for the Telemachus plugin to Kerbal Space Program.
 
+<img src="http://fixermark.com/images/nausicaa/status.png"><img src="http://fixermark.com/images/nausicaa/docking.png">
+
 Features
 ========
   * Display critical information on your ship's status (altitude, velocity, orbit, electric charge, fuel supply)
