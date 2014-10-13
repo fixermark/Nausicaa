@@ -8,7 +8,7 @@ A Google Glass client for the Telemachus plugin to Kerbal Space Program.
 Features
 ========
   * Display critical information on your ship's status (altitude, velocity, orbit, electric charge, fuel supply)
-  * Docking view ("Ok glass... docking view"). Shows RCS fuel remaining and the relative alignment of your craft to the docking target
+  * Docking view ("OK glass... docking view"). Shows RCS fuel remaining and the relative alignment of your craft to the docking target
   * Voice status updates and warnings for attaining circular orbit, bringing periapsis too close to a planet's atmosphere, and
     running low on electricity
     * Electricity warning includes automatic override to switch off time scaling (disable via "Ok glass... toggle alert guard"). This
